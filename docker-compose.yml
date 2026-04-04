@@ -1,6 +1,11 @@
 version: '3.8'
 
 services:
+
+  # ============================================================
+  # DEFAULT profile - H2 in-memory database (port 8080)
+  # Usage: docker compose up hello-app
+  # ============================================================
   hello-app:
     build:
       context: .
@@ -18,4 +23,59 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+
+  # ============================================================
+  # SIT profile - MySQL database (port 9090)
+  # Usage: docker compose --profile sit up
+  # ============================================================
+  mysql-db:
+    image: mysql:8.0
+    container_name: helloapp-mysql
+    profiles:
+      - sit
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: helloapp_sit
+      MYSQL_USER: helloapp
+      MYSQL_PASSWORD: helloapp123
+    volumes:
+      - mysql-data:/var/lib/mysql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  hello-app-sit:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: helloapp-sit-container
+    profiles:
+      - sit
+    ports:
+      - "9090:9090"
+    environment:
+      - SPRING_PROFILES_ACTIVE=sit
+      - SPRING_APPLICATION_NAME=HelloApp
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/helloapp_sit?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      - SPRING_DATASOURCE_USERNAME=helloapp
+      - SPRING_DATASOURCE_PASSWORD=helloapp123
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  mysql-data:
 

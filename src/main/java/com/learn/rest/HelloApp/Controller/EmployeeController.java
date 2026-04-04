@@ -99,14 +99,14 @@ public class EmployeeController {
      * @param id Employee ID to delete
      * @return 204 No Content if deleted, 404 if not found
      */
-//    @DeleteMapping("/employee/{id}")
-//    public ResponseEntity<Void> deleteEmployee(@PathVariable Long id) {
-//        if (employeeService.deleteEmployee(id)) {
-//            logger.info("Employee deleted successfully with id: {}", id);
-//            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-//        } else {
-//            logger.warn("Employee not found for deletion with id: {}", id);
-//            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-//        }
-//    }
+    @DeleteMapping("/employee/{id}")
+    public ResponseEntity<Void> deleteEmployee(@PathVariable Long id) {
+        if (employeeService.deleteEmployee(id)) {
+            logger.info("Employee deleted successfully with id: {}", id);
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        } else {
+            logger.warn("Employee not found for deletion with id: {}", id);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
 }

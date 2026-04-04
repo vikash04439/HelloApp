@@ -23,8 +23,11 @@ WORKDIR /app
 # Copy the built JAR from builder stage
 COPY --from=builder /app/target/HelloApp-0.0.1-SNAPSHOT.jar app.jar
 
-# Expose the port that Spring Boot uses
-EXPOSE 8080
+# Expose ports (8080 for default, 9090 for SIT)
+EXPOSE 8080 9090
+
+# Environment variable for Spring profile (default: empty = default profile)
+ENV SPRING_PROFILES_ACTIVE=""
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
