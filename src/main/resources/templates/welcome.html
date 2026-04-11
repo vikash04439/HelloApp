@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Welcome Dashboard UI</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-light: #3b82f6;
+            --bg: #f1f5f9;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --section-bg: #f8fafc;
+            --accent: #10b981;
+            --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06);
+            --radius: 12px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: #fff;
+            padding: 2rem 1.5rem 1.5rem;
+            text-align: center;
+        }
+        .header h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.25rem; }
+        .header .subtitle { font-size: 0.95rem; opacity: 0.85; }
+        .header .timestamp {
+            margin-top: 0.75rem;
+            font-size: 0.8rem;
+            opacity: 0.7;
+            font-family: monospace;
+        }
+        .header .status-dot {
+            display: inline-block;
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            background: var(--accent);
+            margin-right: 6px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+
+        /* Top-level cards grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            box-shadow: var(--shadow);
+            transition: box-shadow 0.2s, transform 0.2s;
+        }
+        .card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+        .card .card-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 0.35rem;
+            font-weight: 600;
+        }
+        .card .card-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+            word-break: break-word;
+        }
+
+        /* Section (nested object) */
+        .section {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+        .section-header {
+            padding: 1rem 1.25rem;
+            background: var(--section-bg);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .section-header .section-icon {
+            width: 32px; height: 32px;
+            border-radius: 8px;
+            background: var(--primary);
+            color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.85rem; font-weight: 700;
+        }
+        .section-header h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+        .section-body {
+            padding: 1.25rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 1rem;
+        }
+        .section-body .card {
+            box-shadow: none;
+            background: var(--section-bg);
+            border: 1px solid var(--border);
+        }
+        .section-body .card:hover {
+            box-shadow: none;
+            transform: none;
+            border-color: var(--primary-light);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 1.5rem;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .header h1 { font-size: 1.35rem; }
+            .cards-grid { grid-template-columns: 1fr; }
+            .section-body { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <div class="header">
+        <h1 th:text="${appName} + ' Dashboard'">HelloApp Dashboard</h1>
+        <div class="subtitle" th:text="${message}">Welcome from the App</div>
+        <div class="timestamp">
+            <span class="status-dot"></span>
+            <span th:text="'Last updated: ' + ${timestamp}">Last updated: --</span>
+        </div>
+    </div>
+
+    <!-- Content -->
+    <div class="container">
+
+        <!-- Top-level scalar info cards -->
+        <div class="cards-grid">
+            <div class="card" th:each="entry : ${scalarEntries}">
+                <div class="card-label" th:text="${entry.key}">Label</div>
+                <div class="card-value" th:text="${entry.value}">Value</div>
+            </div>
+        </div>
+
+        <!-- Nested sections (dynamic) -->
+        <div th:each="section : ${sectionEntries}" class="section">
+            <div class="section-header">
+                <div class="section-icon" th:text="${sectionIcons[section.key] != null ? sectionIcons[section.key] : section.key.substring(0,1).toUpperCase()}">J</div>
+                <h3 th:text="${section.key}">Section</h3>
+            </div>
+            <div class="section-body">
+                <div class="card" th:each="item : ${section.value}">
+                    <div class="card-label" th:text="${item.key}">Label</div>
+                    <div class="card-value" th:text="${item.value}">Value</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <span th:text="${appName}">HelloApp</span> &copy; 2026 &mdash; Welcome Dashboard
+    </div>
+
+</body>
+</html>
+
