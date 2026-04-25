@@ -78,7 +78,7 @@ public class SecurityConfig {
                         // Allow H2 console without authentication
                         .requestMatchers("/h2-console", "/h2-console/**").permitAll()
                         // Allow welcome UI page and static resources without authentication
-                        .requestMatchers("/welcome-dashboard", "/welcome.html", "/css/**", "/js/**", "/images/**").permitAll()
+                        .requestMatchers("/", "/welcome-dashboard", "/welcome.html", "/css/**", "/js/**", "/images/**").permitAll()
                         // All other requests require authentication
                         .anyRequest().authenticated()
                 )

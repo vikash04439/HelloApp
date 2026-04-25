@@ -1,6 +1,9 @@
 package com.learn.rest.HelloApp.entity;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
 @Table(name = "employees")
@@ -24,6 +27,14 @@ public class Employee {
 
     @Column(name = "status", length = 1, nullable = false)
     private String status;
+
+    @CreationTimestamp
+    @Column(name = "created_on", updatable = false)
+    private LocalDateTime createdOn;
+
+    @UpdateTimestamp
+    @Column(name = "modified_on")
+    private LocalDateTime modifiedOn;
 
     // Default constructor
     public Employee() {
@@ -87,6 +98,22 @@ public class Employee {
         this.status = status;
     }
 
+    public LocalDateTime getCreatedOn() {
+        return createdOn;
+    }
+
+    public void setCreatedOn(LocalDateTime createdOn) {
+        this.createdOn = createdOn;
+    }
+
+    public LocalDateTime getModifiedOn() {
+        return modifiedOn;
+    }
+
+    public void setModifiedOn(LocalDateTime modifiedOn) {
+        this.modifiedOn = modifiedOn;
+    }
+
     @Override
     public String toString() {
         return "Employee{" +
@@ -96,6 +123,8 @@ public class Employee {
                 ", department='" + department + '\'' +
                 ", isActive=" + isActive +
                 ", status='" + status + '\'' +
+                ", createdOn=" + createdOn +
+                ", modifiedOn=" + modifiedOn +
                 '}';
     }
 }

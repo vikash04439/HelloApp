@@ -1,5 +1,6 @@
 package com.learn.rest.HelloApp.Controller;
 
+import com.learn.rest.HelloApp.dto.ApiResponse;
 import com.learn.rest.HelloApp.entity.Employee;
 import com.learn.rest.HelloApp.service.EmployeeService;
 import org.slf4j.Logger;
@@ -27,8 +28,16 @@ public class EmployeeController {
      * @return List of active employees
      */
     @GetMapping("/allemployee")
-    public List<Employee> getAllActiveEmployees() {
-        return employeeService.getAllActiveEmployees();
+    public ResponseEntity<ApiResponse<List<Employee>>> getAllActiveEmployees() {
+        List<Employee> employees = employeeService.getAllActiveEmployees();
+        if (employees.isEmpty()) {
+            return new ResponseEntity<>(
+                    new ApiResponse<>("No active (is_active=true) employees found", employees),
+                    HttpStatus.OK);
+        }
+        return new ResponseEntity<>(
+                new ApiResponse<>("Active (is_active=true) employees fetched successfully", employees),
+                HttpStatus.OK);
     }
 
     /**
@@ -36,8 +45,16 @@ public class EmployeeController {
      * @return List of active employees
      */
     @GetMapping("/allemployee-notactive")
-    public List<Employee> getAllNotActiveEmployees() {
-        return employeeService.getAllNotActiveEmployees();
+    public ResponseEntity<ApiResponse<List<Employee>>> getAllNotActiveEmployees() {
+        List<Employee> employees = employeeService.getAllNotActiveEmployees();
+        if (employees.isEmpty()) {
+            return new ResponseEntity<>(
+                    new ApiResponse<>("No inactive (is_active=false) employees found", employees),
+                    HttpStatus.OK);
+        }
+        return new ResponseEntity<>(
+                new ApiResponse<>("Inactive (is_active=false) employees fetched successfully", employees),
+                HttpStatus.OK);
     }
 
     /**
@@ -46,13 +63,18 @@ public class EmployeeController {
      * @return HTTP status code only
      */
     @PostMapping("/addemployee")
-    public ResponseEntity<Void> addEmployees(@RequestBody Employee employee) {
+    public ResponseEntity<ApiResponse<Employee>> addEmployees(@RequestBody Employee employee) {
         try {
-            employeeService.createEmployee(employee);
-            logger.info("Employee created successfully: {}", employee);
-            return new ResponseEntity<>(HttpStatus.CREATED);
+            Employee created = employeeService.createEmployee(employee);
+            logger.info("Employee created successfully: {}", created);
+            return new ResponseEntity<>(
+                    new ApiResponse<>("Employee has been successfully created", created),
+                    HttpStatus.CREATED);
         } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            logger.error("Failed to create employee: {}", e.getMessage());
+            return new ResponseEntity<>(
+                    new ApiResponse<>("Employee could not be created: " + e.getMessage(), null),
+                    HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -62,15 +84,19 @@ public class EmployeeController {
      * @return Employee if found, 404 otherwise
      */
     @GetMapping("/employee/{id}")
-    public ResponseEntity<Employee> getEmployeeById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Employee>> getEmployeeById(@PathVariable Long id) {
         return employeeService.getEmployeeById(id)
                 .map(employee -> {
                     logger.info("Employee found: {}", employee);
-                    return new ResponseEntity<>(employee, HttpStatus.OK);
+                    return new ResponseEntity<>(
+                            new ApiResponse<>("Employee found successfully", employee),
+                            HttpStatus.OK);
                 })
                 .orElseGet(() -> {
                     logger.warn("Employee not found with id: {}", id);
-                    return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+                    return new ResponseEntity<>(
+                            new ApiResponse<>("Employee not found with id: " + id, null),
+                            HttpStatus.NOT_FOUND);
                 });
     }
 
@@ -82,15 +108,19 @@ public class EmployeeController {
      * @return Updated employee if found, 404 otherwise
      */
     @PutMapping("/employee/{id}")
-    public ResponseEntity<Employee> updateEmployee(@PathVariable Long id, @RequestBody Employee employee) {
+    public ResponseEntity<ApiResponse<Employee>> updateEmployee(@PathVariable Long id, @RequestBody Employee employee) {
         return employeeService.updateEmployee(id, employee)
                 .map(updated -> {
                     logger.info("Employee updated successfully: {}", updated);
-                    return new ResponseEntity<>(updated, HttpStatus.OK);
+                    return new ResponseEntity<>(
+                            new ApiResponse<>("Employee updated successfully", updated),
+                            HttpStatus.OK);
                 })
                 .orElseGet(() -> {
                     logger.warn("Employee not found for update with id: {}", id);
-                    return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+                    return new ResponseEntity<>(
+                            new ApiResponse<>("Employee not found with id: " + id, null),
+                            HttpStatus.NOT_FOUND);
                 });
     }
 
@@ -100,13 +130,17 @@ public class EmployeeController {
      * @return 204 No Content if deleted, 404 if not found
      */
     @DeleteMapping("/employee/{id}")
-    public ResponseEntity<Void> deleteEmployee(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> deleteEmployee(@PathVariable Long id) {
         if (employeeService.deleteEmployee(id)) {
             logger.info("Employee deleted successfully with id: {}", id);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            return new ResponseEntity<>(
+                    new ApiResponse<>("Employee deleted successfully", null),
+                    HttpStatus.OK);
         } else {
             logger.warn("Employee not found for deletion with id: {}", id);
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(
+                    new ApiResponse<>("Employee not found with id: " + id, null),
+                    HttpStatus.NOT_FOUND);
         }
     }
 }
