@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import jakarta.annotation.PostConstruct;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
@@ -38,6 +40,22 @@ public class WelcomeController {
     @Value("${logging.file.name:logs/helloapp.log}")
     private String logPath;
 
+    private LocalDateTime serverStartTime;
+
+    @PostConstruct
+    public void init() {
+        serverStartTime = LocalDateTime.now();
+    }
+
+    private String computeUptime() {
+        Duration duration = Duration.between(serverStartTime, LocalDateTime.now());
+        long days = duration.toDays();
+        long hours = duration.toHours() % 24;
+        long minutes = duration.toMinutes() % 60;
+        long seconds = duration.getSeconds() % 60;
+        return String.format("%dd %dh %dm %ds", days, hours, minutes, seconds);
+    }
+
     // ======================== REST Endpoints ========================
 
     /**
@@ -45,7 +63,7 @@ public class WelcomeController {
      */
     @RequestMapping(method = RequestMethod.GET, path = "/")
     public String helloWorld() {
-        return "redirect:/welcome-dashboard";
+        return "redirect:/dashboard";
     }
 
     /**
@@ -86,6 +104,10 @@ public class WelcomeController {
         runtimeInfo.put("maxMemory", runtime.maxMemory() / (1024 * 1024) + " MB");
         info.put("runtime", runtimeInfo);
 
+        // Server Uptime
+        info.put("serverStartTime", serverStartTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        info.put("uptime", computeUptime());
+
         // Timestamp
         info.put("timestamp", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 
@@ -97,7 +119,7 @@ public class WelcomeController {
     /**
      * Thymeleaf dashboard — renders welcome.html template
      */
-    @GetMapping("/welcome-dashboard")
+    @GetMapping("/dashboard")
     public String welcomeDashboard(Model model) {
 
         // Header-level fields
@@ -110,6 +132,8 @@ public class WelcomeController {
         scalarEntries.put("Active Profile", activeProfile);
         scalarEntries.put("Server Port", serverPort);
         scalarEntries.put("Log Path", logPath);
+        scalarEntries.put("Server Started At", serverStartTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        scalarEntries.put("Uptime", computeUptime());
         model.addAttribute("scalarEntries", scalarEntries);
 
         // Section entries (nested card groups) — each entry is a section
