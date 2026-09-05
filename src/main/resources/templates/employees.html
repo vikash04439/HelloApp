@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:text="${appName} + ' · Employees'">Employee Management</title>
+    <link rel="stylesheet" href="/css/app.css"/>
+    <script>
+        (function () {
+            try {
+                var t = localStorage.getItem('helloapp-theme');
+                if (t) document.documentElement.setAttribute('data-theme', t);
+            } catch (e) { /* ignore */ }
+        })();
+    </script>
+</head>
+<body>
+
+    <!-- Nav bar -->
+    <nav class="navbar">
+        <div class="brand">
+            <span class="logo">⚡</span>
+            <span th:text="${appName}">HelloApp</span>
+        </div>
+        <div class="nav-links">
+            <a href="/dashboard">Dashboard</a>
+            <a href="/employees" class="active">Employees</a>
+        </div>
+        <div class="spacer"></div>
+        <button class="theme-toggle" data-theme-toggle type="button" aria-label="Toggle theme">🌙</button>
+    </nav>
+
+    <!-- Header -->
+    <header class="page-header">
+        <h1>Employee Management</h1>
+        <div class="subtitle">Create, view, update and remove employees</div>
+    </header>
+
+    <div class="container">
+
+        <!-- Stats -->
+        <div class="stat-row">
+            <div class="stat-pill primary">
+                <span class="stat-value" id="stat-total">–</span>
+                <span class="stat-label">Total</span>
+            </div>
+            <div class="stat-pill accent">
+                <span class="stat-value" id="stat-active">–</span>
+                <span class="stat-label">Active</span>
+            </div>
+            <div class="stat-pill muted">
+                <span class="stat-value" id="stat-inactive">–</span>
+                <span class="stat-label">Inactive</span>
+            </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <input type="search" class="search-box" id="search" placeholder="🔍  Search name, email or department…"/>
+            <div class="segmented" id="filter">
+                <button data-filter="all" class="active" type="button">All</button>
+                <button data-filter="active" type="button">Active</button>
+                <button data-filter="inactive" type="button">Inactive</button>
+            </div>
+            <div class="spacer"></div>
+            <button class="btn btn-ghost btn-sm" id="btn-refresh" type="button">↻ Refresh</button>
+            <button class="btn btn-primary" id="btn-add" type="button">+ Add Employee</button>
+        </div>
+
+        <!-- Table -->
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Department</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th style="text-align:right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="emp-tbody"></tbody>
+            </table>
+            <div class="loading-state" id="loading">
+                <div class="spinner"></div>
+                <div>Loading employees…</div>
+            </div>
+            <div class="empty-state" id="empty" style="display:none;">
+                <div class="icon">🗂️</div>
+                <div id="empty-text">No employees found.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div class="modal-overlay" id="modal">
+        <div class="modal" role="dialog" aria-modal="true">
+            <div class="modal-header">
+                <h3 id="modal-title">Add Employee</h3>
+                <button class="modal-close" id="modal-close" type="button" aria-label="Close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="f-id"/>
+                <div class="field">
+                    <label for="f-name">Name *</label>
+                    <input type="text" id="f-name" placeholder="Jane Doe" autocomplete="off"/>
+                    <div class="error-text" id="e-name"></div>
+                </div>
+                <div class="field">
+                    <label for="f-email">Email *</label>
+                    <input type="email" id="f-email" placeholder="jane@example.com" autocomplete="off"/>
+                    <div class="error-text" id="e-email"></div>
+                </div>
+                <div class="field">
+                    <label for="f-department">Department</label>
+                    <input type="text" id="f-department" placeholder="Engineering" autocomplete="off"/>
+                    <div class="error-text"></div>
+                </div>
+                <div class="field">
+                    <label for="f-active">Active</label>
+                    <select id="f-active">
+                        <option value="true">Active</option>
+                        <option value="false">Inactive</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="f-status">Status flag (single char)</label>
+                    <input type="text" id="f-status" maxlength="1" value="Y" placeholder="Y"/>
+                    <div class="error-text" id="e-status"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" id="btn-cancel" type="button">Cancel</button>
+                <button class="btn btn-primary" id="btn-save" type="button">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toasts"></div>
+
+    <script src="/js/theme.js"></script>
+    <script src="/js/employees.js"></script>
+</body>
+</html>

@@ -77,8 +77,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authz -> authz
                         // Allow H2 console without authentication
                         .requestMatchers("/h2-console", "/h2-console/**").permitAll()
-                        // Allow welcome UI page and static resources without authentication
-                        .requestMatchers("/", "/welcome-dashboard", "/welcome.html", "/css/**", "/js/**", "/images/**").permitAll()
+                        // Allow welcome UI page, system-info JSON and static resources without authentication.
+                        // NOTE: /employees is intentionally NOT public — hitting it triggers the
+                        // browser Basic-Auth prompt, and the authenticated session is then reused
+                        // by the client-side fetch() calls to the Employee REST API.
+                        .requestMatchers("/", "/dashboard", "/welcome",
+                                "/css/**", "/js/**", "/images/**", "/favicon.ico").permitAll()
                         // All other requests require authentication
                         .anyRequest().authenticated()
                 )

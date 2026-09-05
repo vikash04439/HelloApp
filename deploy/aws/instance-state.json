@@ -1,0 +1,9 @@
+﻿{
+    "region":  "us-east-1",
+    "instanceId":  "i-06fe3854c70862ef7",
+    "publicIp":  "54.167.8.46",
+    "keyName":  "helloapp-key",
+    "pemFile":  "D:\\Work\\Code\\Home\\HelloApp\\deploy\\aws\\helloapp-key.pem",
+    "sgId":  "sg-05a99b19db1425cf5",
+    "createdAt":  "2026-09-05T12:47:49.1238160+05:30"
+}

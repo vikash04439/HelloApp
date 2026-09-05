@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import jakarta.annotation.PostConstruct;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -19,11 +20,11 @@ import java.util.Map;
  * Unified Welcome Controller (MVC + REST).
  * - @Controller at class level enables Thymeleaf view resolution.
  * - @ResponseBody on individual methods returns JSON/plain text directly.
- *
  * Endpoints:
- *   GET /                  → Redirects to /welcome-dashboard
+ *   GET /                  → Redirects to /dashboard
  *   GET /welcome           → JSON system info (REST API)
- *   GET /welcome-dashboard → Thymeleaf HTML dashboard (MVC view)
+ *   GET /dashboard         → Thymeleaf HTML system dashboard (MVC view)
+ *   GET /employees         → Thymeleaf Employee Management UI (MVC view)
  */
 @Controller
 public class WelcomeController {
@@ -171,7 +172,21 @@ public class WelcomeController {
         sectionIcons.put("Runtime", "⚙️");
         model.addAttribute("sectionIcons", sectionIcons);
 
+        // Epoch millis of server start — used by the client-side live uptime ticker
+        model.addAttribute("serverStartEpoch",
+                serverStartTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+
         return "welcome"; // resolves to templates/welcome.html
+    }
+
+    /**
+     * Employee Management UI — renders employees.html template.
+     * Consumes the Employee REST API client-side via fetch.
+     */
+    @GetMapping("/employees")
+    public String employees(Model model) {
+        model.addAttribute("appName", appName);
+        return "employees"; // resolves to templates/employees.html
     }
 }
 
