@@ -37,6 +37,31 @@ function Invoke-Aws {
     return ($out | Out-String).Trim()
 }
 
+function Get-MyPublicIp {
+    <# Auto-detects the caller's current public IPv4 via well-known echo endpoints. #>
+    foreach ($url in @("https://checkip.amazonaws.com", "https://api.ipify.org", "https://ifconfig.me/ip")) {
+        try {
+            $ip = (Invoke-RestMethod -Uri $url -TimeoutSec 10 -ErrorAction Stop | Out-String).Trim()
+            if ($ip -match '^\d{1,3}(\.\d{1,3}){3}$') { return $ip }
+        } catch { }
+    }
+    throw "Could not auto-detect your public IP from any known endpoint."
+}
+
+function Set-SshIngress {
+    <# Ensures the security group allows SSH (22) from $Ip/32; adds it if missing.
+       Duplicate rules are treated as success. #>
+    param([string]$SgId, [string]$Ip, [string]$Region)
+    $res = Invoke-Aws ec2 authorize-security-group-ingress --group-id $SgId --protocol tcp --port 22 --cidr "$Ip/32" --region $Region
+    if ($script:AwsExit -eq 0) {
+        Write-Host "Authorized SSH (22) from $Ip/32."
+    } elseif ($res -match "InvalidPermission.Duplicate") {
+        Write-Host "SSH (22) from $Ip/32 already authorized."
+    } else {
+        throw "Failed to authorize SSH ingress for $Ip/32.`n$res"
+    }
+}
+
 $here      = Split-Path -Parent $MyInvocation.MyCommand.Path
 $stateFile = Join-Path $here "instance-state.json"
 $pemFile   = Join-Path $here "$KeyName.pem"
@@ -68,20 +93,22 @@ Write-Host "Using default VPC: $vpcId"
 
 # --- Security group ---
 Write-Host "== Ensuring security group '$SgName' ==" -ForegroundColor Cyan
+$myIp = Get-MyPublicIp
+Write-Host "Your public IP detected as $myIp (SSH will be restricted to it)."
+
 $sgId = Invoke-Aws ec2 describe-security-groups --filters "Name=group-name,Values=$SgName" "Name=vpc-id,Values=$vpcId" --region $Region --query "SecurityGroups[0].GroupId" --output text
 if ($AwsExit -ne 0 -or -not $sgId -or $sgId -eq "None") {
     $sgId = Invoke-Aws ec2 create-security-group --group-name $SgName --description "HelloApp security group" --vpc-id $vpcId --region $Region --query "GroupId" --output text
     if ($AwsExit -ne 0) { throw "Failed to create security group.`n$sgId" }
     Write-Host "Created security group: $sgId"
 
-    $myIp = (Invoke-RestMethod -Uri "https://checkip.amazonaws.com" -ErrorAction Stop).Trim()
-    Write-Host "Your public IP detected as $myIp (SSH will be restricted to it)."
-
-    $null = Invoke-Aws ec2 authorize-security-group-ingress --group-id $sgId --protocol tcp --port 22 --cidr "$myIp/32" --region $Region
+    Set-SshIngress -SgId $sgId -Ip $myIp -Region $Region
     $null = Invoke-Aws ec2 authorize-security-group-ingress --group-id $sgId --protocol tcp --port 80 --cidr "0.0.0.0/0" --region $Region
     Write-Host "Ingress rules added: 22 (your IP), 80 (public)."
 } else {
     Write-Host "Security group already exists: $sgId"
+    # Reconcile SSH access in case your public IP changed since last run.
+    Set-SshIngress -SgId $sgId -Ip $myIp -Region $Region
 }
 
 # --- Latest Amazon Linux 2023 AMI (via DescribeImages so only EC2 perms are needed) ---
